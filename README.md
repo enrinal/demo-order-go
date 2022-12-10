@@ -38,23 +38,145 @@ This project using Mysql and MongoDb
 
 #### Order
 * GET /api/v1/orders
+```json
+[
+    {
+        "orderId": "5e4f3c7c-3f8a-4c9e-8c1a-3b9f3c7c3f8a",
+        "buyer_id": "5e4f3c7c-3f8a-4c9e-8c1a-3b9f3c7c3f8a",
+        "status": "pending",
+        "created_at": "2019-08-01T00:00:00Z",
+        "updated_at": "2019-08-01T00:00:00Z",
+        "items": [
+            {
+                "id": 1,
+                "quantity": 1
+            }
+        ]
+    }
+]
+```
 * GET /api/v1/orders/:id
+```json
+{
+    "order_id": "5e4f3c7c-3f8a-4c9e-8c1a-3b9f3c7c3f8a",
+    "buyer_id": "5e4f3c7c-3f8a-4c9e-8c1a-3b9f3c7c3f8a",
+    "status": "pending",
+    "created_at": "2019-08-01T00:00:00Z",
+    "updated_at": "2019-08-01T00:00:00Z",
+    "items": [
+        {
+            "id": 1,
+            "quantity": 1
+        }
+    ],
+    "total_price": 100000,
+    "total_quantity": 1,
+    "total_item": 1
+}
+```
 * POST /api/v1/orders
+```json
+{
+    "buyer_id": "5e4f3c7c-3f8a-4c9e-8c1a-3b9f3c7c3f8a",
+    "cart_id": "5e4f3c7c-3f8a-4c9e-8c1a-3b9f3c7c3f8a"
+}
+```
 * POST /api/v1/orders/:id/status
+```json
+{
+    "status": "pending"
+}
+```
 
 #### Product
 * GET /api/v1/products
+```json
+[
+    {
+        "id": "5e4f3c7c-3f8a-4c9e-8c1a-3b9f3c7c3f8a",
+        "name": "Product 1",
+        "price": 10000,
+        "created_at": "2019-08-01T00:00:00Z",
+        "updated_at": "2019-08-01T00:00:00Z"
+[...]
+]
+```
 * GET /api/v1/products/:id
-* POST /api/v1/products
+```json
+{
+    "id": "5e4f3c7c-3f8a-4c9e-8c1a-3b9f3c7c3f8a",
+    "name": "Product 1",
+    "price": 10000,
+    "created_at": "2019-08-01T00:00:00Z",
+    "updated_at": "2019-08-01T00:00:00Z"
+}
+```
 
 #### User
 * POST /api/v1/users
+```json
+{
+  "email": "enrinal@gmail.com",
+  "password": "123456"
+}
+```
 * POST /api/v1/users/login
-* GET /api/v1/users/:id
+  - Request
+```json
+{
+  "email": "enrinal@gmail.com",
+  "password": "123456"
+}
+```
+  - Response
+```json
+{
+  "message": "success",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiZW5yaW5hbCIsInBob25lIjoiNjI4MTI4MTc5NDg0OSIsInJvbGUiOiJhZG1pbiIsImV4cCI6MTY1NDk2Mzc4MX0.Ek8E8uMmbIqlNhJ6Q5G-9xN8vI8kRMhwXno89CeuCh8"
+  }
+}
+```
+* GET /api/v1/users/claims
+```json
+{
+  "message": "success",
+  "data": {
+    "name": "enrinal",
+    "phone": "6281281794849",
+    "role": "admin"
+  }
+}
+```
 
 #### Cart
 * GET /api/v1/carts/:id
+```json
+{
+    "id": "5e4f3c7c-3f8a-4c9e-8c1a-3b9f3c7c3f8a",
+    "buyer_id": "5e4f3c7c-3f8a-4c9e-8c1a-3b9f3c7c3f8a",
+    "created_at": "2019-08-01T00:00:00Z",
+    "updated_at": "2019-08-01T00:00:00Z",
+    "products": [
+        {
+            "id": 1,
+            "quantity": 1
+        }
+    ]
+}
+```
 * POST /api/v1/carts
+```json
+{
+    "buyer_id": "5e4f3c7c-3f8a-4c9e-8c1a-3b9f3c7c3f8a",
+    "products": [
+        {
+            "id": 1,
+            "quantity": 1
+        }
+    ]
+}
+```
 
 ### How To Run This Project
 >  Make Sure you have run the simpleorder.sql in your mysql
