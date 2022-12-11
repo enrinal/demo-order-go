@@ -2,53 +2,76 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"time"
+
+	"github.com/enrinal/demo-order-go/domain"
+
+	"github.com/enrinal/demo-order-go/models"
+	"github.com/rs/zerolog/log"
+
 	"github.com/enrinal/demo-order-go/constant"
 	"github.com/enrinal/demo-order-go/entity"
-	"github.com/enrinal/demo-order-go/models"
-	"github.com/enrinal/demo-order-go/users/repository"
+	"github.com/go-redis/redis/v8"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserService interface {
-	Login(ctx context.Context, req entity.LoginRequest) (*entity.LoginResponse, error)
-	Register(ctx context.Context, req entity.RegisterRequest) error
+type userService struct {
+	userRepo domain.UserRepository
+	rc       *redis.Client
 }
 
-type service struct {
-	userRepo repository.UserRepo
+func NewService(userRepo domain.UserRepository, rc *redis.Client) domain.UserService {
+	return &userService{
+		userRepo: userRepo,
+		rc:       rc,
+	}
 }
 
-func NewService(userRepo *repository.UserRepo) *service {
-	return &service{*userRepo}
-}
+func (u *userService) Login(ctx context.Context, req entity.LoginRequest) (*entity.LoginResponse, error) {
+	res, err := getCacheUserToken(u.rc, ctx, req.Email)
+	if err == nil {
+		log.Info().Msg("get user from cache")
+		return &res, nil
+	}
 
-func (s *service) Login(ctx context.Context, req entity.LoginRequest) (*entity.LoginResponse, error) {
-	user, err := s.userRepo.FindByEmail(ctx, req.Email)
+	user, err := u.userRepo.FindByEmail(ctx, req.Email)
 	if err != nil {
 		return nil, err
 	}
 
 	if !checkPasswordHash(req.Password, user.Password) {
-		return nil, nil
+		return nil, fmt.Errorf("invalid password")
 	}
 
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["email"] = user.Email
-	claims["exp"] = 3600
+	claims["exp"] = constant.ExpToken
 
-	t, err := token.SignedString([]byte(constant.SECRET))
+	t, err := token.SignedString([]byte(constant.Secret))
 	if err != nil {
 		return nil, err
 	}
+
+	// goroutine to set cache
+	go func() {
+		err := setCacheUserToken(u.rc, user.Email, entity.LoginResponse{Token: t})
+		if err != nil {
+			log.Error().Err(err).Msg("set cache user token")
+		}
+		log.Info().Msg("set cache user token success")
+	}()
 
 	return &entity.LoginResponse{
 		Token: t,
 	}, nil
 }
 
-func (s *service) Register(ctx context.Context, req entity.RegisterRequest) error {
+func (u *userService) Register(ctx context.Context, req entity.RegisterRequest) error {
+	// business logic
 	passHash, err := hashPassword(req.Password)
 	if err != nil {
 		return err
@@ -56,7 +79,8 @@ func (s *service) Register(ctx context.Context, req entity.RegisterRequest) erro
 
 	req.Password = passHash
 
-	err = s.userRepo.Store(ctx, models.User{
+	// save to db
+	err = u.userRepo.Store(ctx, models.User{
 		Email:    req.Email,
 		Password: req.Password,
 	})
@@ -72,4 +96,31 @@ func hashPassword(password string) (string, error) {
 func checkPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func cacheKey(email string) string {
+	return fmt.Sprintf("user:%s", email)
+}
+
+func setCacheUserToken(rc *redis.Client, email string, res entity.LoginResponse) error {
+	j, err := json.Marshal(res)
+	if err != nil {
+		return err
+	}
+
+	return rc.Set(context.Background(), cacheKey(email), j, time.Duration(constant.ExpToken)*time.Second).Err()
+}
+
+func getCacheUserToken(rc *redis.Client, ctx context.Context, email string) (entity.LoginResponse, error) {
+	var res entity.LoginResponse
+	op := rc.Get(ctx, cacheKey(email))
+	if op.Err() != nil {
+		return res, op.Err()
+	}
+
+	err := json.Unmarshal([]byte(op.Val()), &res)
+	if err != nil {
+		return res, err
+	}
+	return res, nil
 }

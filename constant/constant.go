@@ -1,7 +1,8 @@
 package constant
 
 const (
-	MONGO_DATABASE_NAME = "demo_order_go"
-	COLLECTION_USERS    = "users"
-	SECRET              = "demo_order_go"
+	MongoDatabaseName = "demo_order_go"
+	CollectionUsers   = "users"
+	Secret            = "demo_order_go"
+	ExpToken          = 60 * 60 * 1 // 1 hour
 )

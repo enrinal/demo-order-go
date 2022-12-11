@@ -1,5 +1,8 @@
 {
   "mongo": {
     "uri": "mongodb://localhost:27017/demo_order_go"
+  },
+  "redis": {
+    "host": "127.0.0.1:6379"
   }
 }

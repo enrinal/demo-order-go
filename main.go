@@ -6,6 +6,7 @@ import (
 	"github.com/enrinal/demo-order-go/users/repository"
 	"github.com/enrinal/demo-order-go/users/service"
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 )
 
@@ -19,6 +20,17 @@ func init() {
 }
 
 func main() {
+	// redis
+	redisHost := viper.GetString("redis.host")
+
+	// connect to redis
+	redisClient, err := config.ConnectRedis(redisHost)
+	if err != nil {
+		panic(err)
+	}
+
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+
 	mongoUri := viper.GetString("mongo.uri")
 
 	c, err := config.ConnectMongo(mongoUri)
@@ -30,7 +42,7 @@ func main() {
 
 	userRepo := repository.NewUserRepo(c)
 
-	userService := service.NewService(userRepo)
+	userService := service.NewService(userRepo, redisClient)
 
 	delivery.NewUserHandler(e, userService)
 

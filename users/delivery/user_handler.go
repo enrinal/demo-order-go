@@ -1,25 +1,30 @@
 package delivery
 
 import (
-	"github.com/enrinal/demo-order-go/entity"
-	"github.com/enrinal/demo-order-go/users/service"
-	"github.com/labstack/echo/v4"
 	"net/http"
+
+	"github.com/enrinal/demo-order-go/domain"
+
+	"github.com/enrinal/demo-order-go/entity"
+	"github.com/labstack/echo/v4"
 )
 
 type UserHandler struct {
-	userSvc service.UserService
+	userSvc domain.UserService
 }
 
-func NewUserHandler(e *echo.Echo, userSvc service.UserService) *UserHandler {
+func NewUserHandler(e *echo.Echo, userSvc domain.UserService) *UserHandler {
 	handler := &UserHandler{userSvc}
-	e.POST("/api/v1/users/login", handler.Login)
-	e.POST("/api/v1/users/register", handler.Register)
+
+	basePath := "/api/v1/users"
+	e.POST(basePath+"/login", handler.Login)
+	e.POST(basePath, handler.Register)
+
 	return handler
 }
 
 func (h *UserHandler) Login(c echo.Context) error {
-
+	// decode request
 	var req entity.LoginRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, entity.BaseResponse{
@@ -27,6 +32,7 @@ func (h *UserHandler) Login(c echo.Context) error {
 		})
 	}
 
+	// call service
 	res, err := h.userSvc.Login(c.Request().Context(), req)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, entity.BaseResponse{
