@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/enrinal/demo-order-go/domain"
-
-	"github.com/enrinal/demo-order-go/models"
 	"github.com/rs/zerolog/log"
+
+	"github.com/enrinal/demo-order-go/domain"
 
 	"github.com/enrinal/demo-order-go/constant"
 	"github.com/enrinal/demo-order-go/entity"
+	"github.com/enrinal/demo-order-go/models"
 	"github.com/go-redis/redis/v8"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
@@ -49,7 +49,7 @@ func (u *userService) Login(ctx context.Context, req entity.LoginRequest) (*enti
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["email"] = user.Email
-	claims["exp"] = constant.ExpToken
+	claims["exp"] = time.Now().Add(time.Duration(constant.ExpToken) * time.Second).Unix()
 
 	t, err := token.SignedString([]byte(constant.Secret))
 	if err != nil {
@@ -57,6 +57,7 @@ func (u *userService) Login(ctx context.Context, req entity.LoginRequest) (*enti
 	}
 
 	// goroutine to set cache
+	// fire and forget
 	go func() {
 		err := setCacheUserToken(u.rc, user.Email, entity.LoginResponse{Token: t})
 		if err != nil {

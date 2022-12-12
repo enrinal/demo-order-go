@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/enrinal/demo-order-go/domain"
-
 	"go.mongodb.org/mongo-driver/bson"
+
+	"github.com/enrinal/demo-order-go/domain"
 
 	"github.com/enrinal/demo-order-go/constant"
 	"github.com/enrinal/demo-order-go/models"
@@ -15,7 +15,7 @@ import (
 )
 
 type userRepo struct {
-	mgo *mongo.Client
+	mgo *mongo.Client // dependency injection
 }
 
 func NewUserRepo(mgo *mongo.Client) domain.UserRepository {
@@ -46,7 +46,7 @@ func (u *userRepo) Store(ctx context.Context, user models.User) error {
 	collection := u.mgo.Database(constant.MongoDatabaseName).Collection(constant.CollectionUsers)
 
 	user.ID = primitive.NewObjectID() // generate new id in mongodb
-	user.CreateAt = time.Now().String()
+	user.CreateAt = time.Now().Format(time.RFC3339)
 	_, err := collection.InsertOne(ctx, user)
 	if err != nil {
 		return err

@@ -20,6 +20,8 @@ func init() {
 }
 
 func main() {
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+
 	// redis
 	redisHost := viper.GetString("redis.host")
 
@@ -28,8 +30,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
 	mongoUri := viper.GetString("mongo.uri")
 
