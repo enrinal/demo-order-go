@@ -1,11 +1,15 @@
 package entity
 
 type Product struct {
-	ID    int64  `json:"id"`
-	Name  string `json:"name"`
-	Price int64  `json:"price"`
+	ID    string  `json:"id"`
+	Name  string  `json:"name"`
+	Price float64 `json:"price"`
 }
 
 type ListProductsResponse struct {
 	Products []Product `json:"products"`
+}
+
+func GetProductCacheKey(id string) string {
+	return "product:" + id
 }

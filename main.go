@@ -2,9 +2,12 @@ package main
 
 import (
 	"github.com/enrinal/demo-order-go/config"
-	"github.com/enrinal/demo-order-go/users/delivery"
-	"github.com/enrinal/demo-order-go/users/repository"
-	"github.com/enrinal/demo-order-go/users/service"
+	productHdl "github.com/enrinal/demo-order-go/products/delivery"
+	productRepo "github.com/enrinal/demo-order-go/products/repository"
+	productSvc "github.com/enrinal/demo-order-go/products/service"
+	userHdl "github.com/enrinal/demo-order-go/users/delivery"
+	userRepo "github.com/enrinal/demo-order-go/users/repository"
+	userSvc "github.com/enrinal/demo-order-go/users/service"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
@@ -40,11 +43,13 @@ func main() {
 
 	e := echo.New()
 
-	userRepo := repository.NewUserRepo(c)
+	userRepo := userRepo.NewUserRepo(c)
+	userService := userSvc.NewService(userRepo, redisClient)
+	userHdl.NewUserHandler(e, userService)
 
-	userService := service.NewService(userRepo, redisClient)
-
-	delivery.NewUserHandler(e, userService)
+	productRepo := productRepo.NewProductRepo(c)
+	productService := productSvc.NewProductService(productRepo, redisClient)
+	productHdl.NewProductHandler(e, productService)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
