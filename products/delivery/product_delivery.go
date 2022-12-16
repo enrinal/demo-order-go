@@ -12,14 +12,8 @@ type ProductHandler struct {
 	ProductService domain.ProductService
 }
 
-func NewProductHandler(e *echo.Echo, productService domain.ProductService) *ProductHandler {
-	handler := &ProductHandler{ProductService: productService}
-
-	basePath := "/api/v1/products"
-	e.GET(basePath, handler.GetAll)
-	e.GET(basePath+"/:id", handler.GetById)
-
-	return handler
+func NewProductHandler(productService domain.ProductService) *ProductHandler {
+	return &ProductHandler{ProductService: productService}
 }
 
 func (h *ProductHandler) GetAll(c echo.Context) error {

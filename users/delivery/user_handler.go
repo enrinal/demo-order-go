@@ -13,14 +13,8 @@ type UserHandler struct {
 	userSvc domain.UserService
 }
 
-func NewUserHandler(e *echo.Echo, userSvc domain.UserService) *UserHandler {
-	handler := &UserHandler{userSvc}
-
-	basePath := "/api/v1/users"
-	e.POST(basePath+"/login", handler.Login)
-	e.POST(basePath, handler.Register)
-
-	return handler
+func NewUserHandler(userSvc domain.UserService) *UserHandler {
+	return &UserHandler{userSvc: userSvc}
 }
 
 func (h *UserHandler) Login(c echo.Context) error {
