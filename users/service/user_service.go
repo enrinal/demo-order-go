@@ -50,6 +50,7 @@ func (u *userService) Login(ctx context.Context, req entity.LoginRequest) (*enti
 	claims := token.Claims.(jwt.MapClaims)
 	claims["email"] = user.Email
 	claims["exp"] = time.Now().Add(time.Duration(constant.ExpToken) * time.Second).Unix()
+	claims["user_id"] = user.ID
 
 	t, err := token.SignedString([]byte(constant.Secret))
 	if err != nil {

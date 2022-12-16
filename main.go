@@ -3,6 +3,11 @@ package main
 import (
 	"os"
 
+	"github.com/enrinal/demo-order-go/constant"
+
+	cartHdl "github.com/enrinal/demo-order-go/carts/delivery"
+	cartRepo "github.com/enrinal/demo-order-go/carts/repository"
+	cartSvc "github.com/enrinal/demo-order-go/carts/service"
 	"github.com/enrinal/demo-order-go/config"
 	productHdl "github.com/enrinal/demo-order-go/products/delivery"
 	productRepo "github.com/enrinal/demo-order-go/products/repository"
@@ -53,18 +58,28 @@ func main() {
 	productService := productSvc.NewProductService(newProductRepo, redisClient)
 	productHandler := productHdl.NewProductHandler(productService)
 
+	newCartRepo := cartRepo.NewCartRepository(c)
+	cartService := cartSvc.NewCartService(newCartRepo, newProductRepo, redisClient)
+	cartHandler := cartHdl.NewCartHandler(cartService)
+
 	e := echo.New()
 	e.Use(middleware.Recover())
 	e.Use(middleware.Logger())
 
+	jwtMiddleware := middleware.JWT([]byte(constant.Secret))
+
 	r := e.Group("/api/v1")
 	// disable jwt middleware for register and login
-	r.POST("/register", userHandler.Register)
-	r.POST("/login", userHandler.Login)
+	r.POST("/users/register", userHandler.Register)
+	r.POST("/users/login", userHandler.Login)
 
 	// product routes
-	r.GET("/products", productHandler.GetAll)
-	r.GET("/products/:id", productHandler.GetById)
+	r.GET("/products", productHandler.GetAll, jwtMiddleware)
+	r.GET("/products/:id", productHandler.GetById, jwtMiddleware)
+
+	// cart routes
+	r.POST("/carts", cartHandler.AddCart, jwtMiddleware)
+	r.GET("/carts/:id", cartHandler.GetCartById, jwtMiddleware)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }

@@ -6,7 +6,7 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type CartProduct struct {
 	Product
-	Quantity int `json:"quantity" bson:"quantity"`
+	Quantity int64 `json:"quantity" bson:"quantity"`
 }
 
 type Cart struct {
